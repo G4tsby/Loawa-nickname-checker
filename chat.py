@@ -2,43 +2,37 @@ import os
 from urllib.request import urlopen
 from urllib import parse
 from bs4 import BeautifulSoup
+import re
 
 server = ["루페온", "카제로스", "카마인", "카단", "아브렐슈드", "실리안", "아만", "니나브", "카제", "루페", "실리", "아브", "아브렐"]
-
 ban_list = []
+ex = re.compile("[/w/가-힣]")
 
 def get_nick():
     print("채팅 내역으로부터 닉네임 추출중")
     raw = open("KakaoTalkChats.txt", "rt", encoding="UTF-8")
     nick = raw.readlines()
     out = open("./out/nick.txt", "wt", encoding="UTF-8")
+    nick = nick[5:]
     nick[0] = nick[0][1:]
     nickname = []
-    cnt = 0
     for i in nick:
-        if i[:4] == "2021":
-            if cnt >= 24686 and cnt <= 93167:
-                i = i[22:i.find(" : ")]
-            else:
-                i = i[23:i.find(" : ")]
-            if "나갔습니다" in i:
-                i = i[:-9]
-                if i in nickname:
-                    nickname.remove(i)
-                    #print(f"{i} 제거됨")
-                i = ""
-            if "내보냈습니다." in i:
-                i = i[:-10]
-                if i in nickname:
-                    nickname.remove(i)
-                    #print(f"{i} 제거됨")
-                i = ""
-            if "들어왔습니다." in i:
-                i = i[:-10]
-            if not i in nickname and i != "":
+        if i[0] == "[":
+            i = i[1:i.find("]")]
+            if not i in nickname:
                 nickname.append(i)
-                #print(f"{i/len(b)*100:.2f}% {i}")
-        cnt += 1
+        else: 
+            if "님이 들어왔습니다." in i:
+                i = i[:-11]
+                nickname.append(i)
+            elif "님이 나갔습니다." in i:
+                i = i[:-10]
+                if i in nickname:
+                    nickname.remove(i)
+            elif "님을 내보냈습니다.":
+                i = i[:-11]
+                if i in nickname:
+                    nickname.remove(i)
     for i in range(len(nickname)):
         out.write(nickname[i])
         out.write("\n")
@@ -52,7 +46,7 @@ def check_fow():
     nick = raw.readlines()
     extra = []
     for i in range(len(nick)):
-        nick[i] = nick[i].replace(" ","")[:-1]
+        nick[i] = ''.join(ex.findall(nick[i]))
         extra.append(nick[i])
     for i in nick:
         for j in server:
@@ -87,8 +81,8 @@ def check_back():
     nick = raw.readlines()
     extra = []
     for i in range(len(nick)):
-        nick[i] = nick[i].replace(" ","")[:-1]
         extra.append(nick[i])
+        nick[i] = nick[i].replace(" ","")[:-1]
     for i in nick:
         for j in server:
             if j+"/" in i:
@@ -127,8 +121,12 @@ def check_back():
     print("추방 예정자 리스트가 /out/ban_list.txt로 생성됨.")
 
 if __name__ == "__main__":
-    print("\n로스트아크 채팅방 닉네임 검사기")
-    print("\n\nCopyright 2021. 행복관NPC all rights reserved.\n\n")
+    print("######################################################")
+    print("#                                                    #")
+    print("#          로스트아크 채팅방 닉네임 검사기           #")
+    print("#                                                    #")
+    print("#   Copyright 2021. 행복관NPC all rights reserved.   #")
+    print("######################################################\n")
     if not os.path.exists("./out"):
         os.makedirs("./out")
     get_nick()
